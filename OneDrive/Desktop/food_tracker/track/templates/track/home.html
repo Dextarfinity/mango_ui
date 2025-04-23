@@ -1,0 +1,10 @@
+{% extends "track/base.html" %} {% block title %}Home - Food Tracker{%endblock%}
+{% block content %}
+<ul>
+  {% for item in items %}
+  <li>{{ item.name }} - {{ item.quantity }} - {{ item.category }}</li>
+  {% empty %}
+  <li class="empty-message">No food items logged yet.</li>
+  {% endfor %}
+</ul>
+{% endblock %}
