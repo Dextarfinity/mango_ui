@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crispy King - Services & Products</title>
+    <style>
+        :root {
+            --red: #e81601;
+            --gold: #FFD700;
+            --cream: #FFF9E6;
+            --dark: #333;
+            --light: #fff;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', Arial, sans-serif;
+            background-color: var(--cream);
+            color: var(--dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+        /* Hero Banner */
+        .hero-banner {
+            position: relative;
+            height: 60vh;
+            overflow: hidden;
+        }
+
+        .hero-banner img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            animation: zoomInOut 15s infinite alternate;
+        }
+
+        @keyframes zoomInOut {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+
+        /* Menu Items Section */
+        .menu-section {
+            padding: 80px 5%;
+            background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHBhdHRlcm5UcmFuc2Zvcm09InJvdGF0ZSg0NSkiPjxyZWN0IHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0icmdiYSgyMzIsMjIsMSwwLjAzKSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3QgZmlsbD0idXJsKCNwYXR0ZXJuKSIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIvPjwvc3ZnPg==');
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-title h2 {
+            font-size: 2.5rem;
+            color: var(--red);
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-title h2::after {
+            content: "";
+            position: absolute;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background-color: var(--gold);
+            border-radius: 2px;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .menu-item {
+            background: var(--light);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            z-index: 1;
+        }
+
+        .menu-item::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--red) 0%, var(--gold) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+
+        .menu-item:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(232, 22, 1, 0.2);
+        }
+
+        .menu-item:hover::before {
+            opacity: 0.1;
+        }
+
+        .menu-item:hover .item-price {
+            color: var(--gold);
+        }
+
+        .item-image {
+            height: 200px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .menu-item:hover .item-image img {
+            transform: scale(1.1);
+        }
+
+        .item-content {
+            padding: 25px;
+            text-align: center;
+        }
+
+        .item-price {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--red);
+            margin-bottom: 10px;
+            transition: color 0.3s ease;
+        }
+
+        .item-desc {
+            font-size: 1.1rem;
+            color: var(--dark);
+        }
+
+        /* Services Section */
+        .services-section {
+            padding: 80px 5%;
+            background-color: var(--red);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .services-section::before {
+            content: "";
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 200px;
+            height: 200px;
+            background-color: var(--gold);
+            border-radius: 50%;
+            opacity: 0.1;
+        }
+
+        .services-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .service-card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(5px);
+            border-radius: 15px;
+            padding: 30px;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .service-card:hover {
+            transform: translateY(-10px);
+            background: rgba(255,255,255,0.15);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+        }
+
+        .service-card::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--gold), var(--red));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s ease;
+        }
+
+        .service-card:hover::after {
+            transform: scaleX(1);
+        }
+
+        .service-icon {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            display: inline-block;
+            transform: translateY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .service-card:hover .service-icon {
+            transform: translateY(-5px);
+        }
+
+        .service-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--gold);
+        }
+
+        .service-card ul {
+            list-style-type: none;
+        }
+
+        .service-card li {
+            margin-bottom: 10px;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .service-card li::before {
+            content: "•";
+            color: var(--gold);
+            font-size: 1.5rem;
+            position: absolute;
+            left: 0;
+            top: -5px;
+        }
+
+        .store-image {
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            margin-top: 40px;
+        }
+
+        .store-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Testimonials Section */
+        .testimonials-section {
+            padding: 80px 5%;
+            background-color: var(--light);
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .testimonial-card {
+            background: var(--light);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .testimonial-card::before {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 5rem;
+            color: rgba(232, 22, 1, 0.05);
+            font-family: serif;
+            line-height: 1;
+        }
+
+        .testimonial-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+        }
+
+        .testimonial-card p {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .testimonial-rating {
+            color: var(--gold);
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+        }
+
+        .testimonial-author {
+            font-weight: 600;
+            color: var(--red);
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--dark);
+            color: white;
+            padding: 50px 5% 20px;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            text-align: left;
+        }
+
+        .footer-column h3 {
+            color: var(--gold);
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column li {
+            margin-bottom: 10px;
+        }
+
+        .footer-column a {
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-column a:hover {
+            color: var(--gold);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .social-links a {
+            color: white;
+            background: rgba(255,255,255,0.1);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .social-links a:hover {
+            background: var(--gold);
+            color: var(--red);
+            transform: translateY(-3px);
+        }
+
+        .copyright {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.5);
+            font-size: 0.9rem;
+        }
+
+        /* Animations */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @media (max-width: 768px) {
+            .hero-banner {
+                height: 40vh;
+            }
+            
+            .section-title h2 {
+                font-size: 2rem;
+            }
+            
+            .footer-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            
+            .social-links {
+                justify-content: center;
+            }
+        }
+        nav {
+            background-color: var(--red);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 5%;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .logo {
+            height: 45px;
+            transition: transform 0.3s ease;
+        }
+        
+        .logo:hover {
+            transform: scale(1.05);
+        }
+        .nav-links {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .nav-links a {
+            color: var(--light);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: var(--gold);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--gold);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <img src="imgs/logo.jpg" alt="Crispy King Logo" class="logo">
+        <div class="nav-links">
+            <a href="cKing.html">Home</a>
+            <a href="menu.html">Products</a>
+            <a href="contact.html">Contact</a>
+        </div>
+    </nav>
+    <!-- Hero Banner -->
+    <section class="hero-banner">
+        <img src="imgs/background1.png" alt="Crispy King Products Banner">
+    </section>
+
+    <!-- Menu Items -->
+    <section class="menu-section">
+        <div class="section-title">
+            <h2>Our Affordable Menu</h2>
+            <p>Delicious meals that won't break the bank</p>
+        </div>
+        <div class="menu-grid">
+            <div class="menu-item">
+                <div class="item-image">
+                    <img src="imgs/1.png" alt="Crispy Chicken with Rice">
+                </div>
+                <div class="item-content">
+                    <div class="item-price">₱52 only</div>
+                    <div class="item-desc">Crispy Chicken with one rice</div>
+                </div>
+            </div>
+            
+            <div class="menu-item">
+                <div class="item-image">
+                    <img src="imgs/5.png" alt="One Piece Chicken">
+                </div>
+                <div class="item-content">
+                    <div class="item-price">₱40 only</div>
+                    <div class="item-desc">One piece chicken</div>
+                </div>
+            </div>
+            
+            <div class="menu-item">
+                <div class="item-image">
+                    <img src="imgs/2.png" alt="Lumpia">
+                </div>
+                <div class="item-content">
+                    <div class="item-price">₱8 only</div>
+                    <div class="item-desc">Lumpia</div>
+                </div>
+            </div>
+            
+            <div class="menu-item">
+                <div class="item-image">
+                    <img src="imgs/3.png" alt="Bola Bola">
+                </div>
+                <div class="item-content">
+                    <div class="item-price">₱10 only</div>
+                    <div class="item-desc">Bola Bola</div>
+                </div>
+            </div>
+            
+            <div class="menu-item">
+                <div class="item-image">
+                    <img src="imgs/4.png" alt="Ngohiong">
+                </div>
+                <div class="item-content">
+                    <div class="item-price">₱12 only</div>
+                    <div class="item-desc">Ngohiong</div>
+                </div>
+            </div>
+            
+            <div class="menu-item">
+                <div class="item-image">
+                    <img src="imgs/6.png" alt="Siomai">
+                </div>
+                <div class="item-content">
+                    <div class="item-price">₱30 only</div>
+                    <div class="item-desc">Siomai</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section class="services-section">
+        <div class="section-title">
+            <h2 style="color: white;">Our Services</h2>
+            <p style="color: rgba(255,255,255,0.8);">Multiple ways to enjoy your Crispy King favorites</p>
+        </div>
+        <div class="services-container">
+            <div class="service-card">
+                <div class="service-icon">🍽️</div>
+                <h3>Dine-in</h3>
+                <ul>
+                    <li>Cozy and clean dining spaces</li>
+                    <li>Fast, courteous service</li>
+                    <li>Designed for Filipino family dining</li>
+                </ul>
+            </div>
+            
+            <div class="service-card">
+                <div class="service-icon">📦</div>
+                <h3>Take-Out</h3>
+                <ul>
+                    <li>Fast and easy pick-up</li>
+                    <li>Secure packaging</li>
+                    <li>Meal trays ideal for pasalubong</li>
+                </ul>
+            </div>
+            
+            <div class="service-card">
+                <div class="service-icon">🏍️</div>
+                <h3>Delivery</h3>
+                <ul>
+                    <li>GrabFood & Foodpanda</li>
+                    <li>Direct hotline delivery</li>
+                    <li>Facebook Messenger orders</li>
+                </ul>
+            </div>
+            
+            <div class="service-card">
+                <div class="service-icon">🎉</div>
+                <h3>Event Catering</h3>
+                <ul>
+                    <li>Customized catering trays</li>
+                    <li>Birthdays & office lunches</li>
+                    <li>Community events</li>
+                </ul>
+            </div>
+            
+            <div class="service-card">
+                <div class="service-icon">💰</div>
+                <h3>Franchising</h3>
+                <ul>
+                    <li>Low-startup plans</li>
+                    <li>Full training support</li>
+                    <li>Nationwide expansion</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="store-image floating">
+            <img src="imgs/store.jpg" alt="Crispy King Store">
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials-section">
+        <div class="section-title">
+            <h2>Why Customers Love Us</h2>
+            <p>What our satisfied customers say about Crispy King</p>
+        </div>
+        <div class="testimonials-grid">
+            <div class="testimonial-card">
+                <div class="testimonial-rating">★★★★★</div>
+                <p>"The crunch is always perfect! At ₱52 for chicken with rice, it's my everyday lunch as a student."</p>
+                <div class="testimonial-author">- Juan Dela Cruz</div>
+            </div>
+            
+            <div class="testimonial-card">
+                <div class="testimonial-rating">★★★★★</div>
+                <p>"My kids love the chicken skin snacks. Affordable merienda that doesn't compromise on taste!"</p>
+                <div class="testimonial-author">- Maria Santos</div>
+            </div>
+            
+            <div class="testimonial-card">
+                <div class="testimonial-rating">★★★★☆</div>
+                <p>"Great for quick family dinners. The gravy is amazing and the staff are always friendly."</p>
+                <div class="testimonial-author">- The Garcia Family</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-column">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="cKing.html">Home</a></li>
+                    <li><a href="menu.html">Menu</a></li>
+                    
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Contact Us</h3>
+                <ul>
+                    <li>📞 (02) 6845-1123</li>
+                    <li>📧 CrispyKingJCAquinoAve@gmail.com</li>
+                    <li>📍 1946 J C Aquino Ave, Butuan City, Agusan Del Norte</li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Follow Us</h3>
+                <div class="social-links">
+                    <a href="https://www.facebook.com/crispykingph" aria-label="Facebook">📘</a>
+                    <a href="#" aria-label="Instagram">📷</a>
+                    <a href="#" aria-label="Twitter">🐦</a>
+                    <a href="#" aria-label="TikTok">🎵</a>
+                </div>
+            </div>
+        </div>
+        <div class="copyright">
+            © 2025 Crispy King Philippines. All Rights Reserved.
+        </div>
+    </footer>
+</body>
+</html>
