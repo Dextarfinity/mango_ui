@@ -21,7 +21,9 @@ export const LoginPage = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    console.log('LoginPage: isAuthenticated changed:', isAuthenticated);
     if (isAuthenticated) {
+      console.log('LoginPage: Navigating to dashboard');
       navigate('/dashboard');
     }
   }, [isAuthenticated, navigate]);
@@ -70,15 +72,20 @@ export const LoginPage = () => {
       if (isSignUp) {
         result = await signup(formData.email, formData.password, formData.name);
       } else {
+        console.log('LoginPage: Calling login...');
         result = await login(formData.email, formData.password);
+        console.log('LoginPage: Login result:', result);
       }
 
       if (result.success) {
+        console.log('LoginPage: Login successful, navigating to dashboard');
         navigate('/dashboard');
       } else {
+        console.log('LoginPage: Login failed:', result.error);
         setErrors({ form: result.error || 'Authentication failed' });
       }
     } catch (error) {
+      console.error('LoginPage: Error during login:', error);
       setErrors({ form: 'An error occurred. Please try again.' });
     } finally {
       setLoading(false);

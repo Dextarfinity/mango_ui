@@ -146,10 +146,12 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
+      console.log('AuthContext: login() called with email:', email);
       setLoading(true);
       
       // Demo mode: Allow any login
       const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true' || !import.meta.env.VITE_SUPABASE_URL;
+      console.log('AuthContext: isDemoMode:', isDemoMode);
       
       if (isDemoMode) {
         console.log('🎭 Demo mode: Bypassing authentication');
@@ -166,13 +168,17 @@ export const AuthProvider = ({ children }) => {
           notifications: true
         };
         
+        console.log('AuthContext: Created demo user:', demoUser);
+        
         // Store demo user in sessionStorage
         sessionStorage.setItem('demoUser', JSON.stringify(demoUser));
         
+        console.log('AuthContext: Setting user and session...');
         setUser(demoUser);
         setSession({ user: { id: demoUser.id, email: demoUser.email } });
         setLoading(false);
         
+        console.log('AuthContext: Login complete, returning success');
         return { success: true, data: { user: demoUser } };
       }
       
