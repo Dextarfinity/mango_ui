@@ -1,0 +1,9 @@
+names:
+- Die Back
+- Healthy
+- Powder Mildew
+nc: 3
+path: C:\Users\Teacher\Downloads\AI TRAINING\Mango-Leaf-Diseases-v2.v1i.coco
+test: test
+train: train
+val: valid

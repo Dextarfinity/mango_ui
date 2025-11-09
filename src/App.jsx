@@ -5,6 +5,7 @@ import { ScanProvider } from './context/ScanContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { Layout } from './components/layout/Layout';
 import { Toast } from './components/common/Toast';
+import { FullPageLoader } from './components/common/Loading';
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
@@ -15,14 +16,10 @@ import { ProfilePage } from './pages/ProfilePage';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, fadeOut } = useAuth();
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-leaf-600 border-t-transparent" />
-      </div>
-    );
+    return <FullPageLoader message="Initializing Scan2Save..." fadeOut={fadeOut} />;
   }
 
   return isAuthenticated ? children : <Navigate to="/login" replace />;
@@ -30,14 +27,10 @@ const ProtectedRoute = ({ children }) => {
 
 // Public Route Component (redirect to dashboard if already logged in)
 const PublicRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, fadeOut } = useAuth();
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-leaf-600 border-t-transparent" />
-      </div>
-    );
+    return <FullPageLoader message="Loading..." fadeOut={fadeOut} />;
   }
 
   return !isAuthenticated ? children : <Navigate to="/dashboard" replace />;
@@ -47,8 +40,15 @@ function AppRoutes() {
   return (
     <Layout>
       <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<LandingPage />} />
+        {/* Public Routes - Only accessible when NOT logged in */}
+        <Route 
+          path="/" 
+          element={
+            <PublicRoute>
+              <LandingPage />
+            </PublicRoute>
+          } 
+        />
         <Route 
           path="/login" 
           element={
@@ -58,7 +58,7 @@ function AppRoutes() {
           } 
         />
 
-        {/* Protected Routes */}
+        {/* Protected Routes - Only accessible when logged in */}
         <Route
           path="/dashboard"
           element={
@@ -100,7 +100,7 @@ function AppRoutes() {
           }
         />
 
-        {/* Catch all - redirect to home */}
+        {/* Catch all - redirect to dashboard if logged in, otherwise landing */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>

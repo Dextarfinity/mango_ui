@@ -2,6 +2,8 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, Upload, Loader, AlertCircle, Info } from 'lucide-react';
 import { useScan } from '../context/ScanContext';
+import { useAuth } from '../context/AuthContext';
+import { useTranslation } from '../hooks/useTranslation';
 import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
 import { analyzeImage } from '../utils/mockAPI';
@@ -10,11 +12,15 @@ import { showToast } from '../components/common/Toast';
 
 export const ScanPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { saveScan, setLoading, loading } = useScan();
+  const { ts } = useTranslation();
+  const tx = ts('scan');
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
 
   const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [progress, setProgress] = useState(0);
 
@@ -23,22 +29,23 @@ export const ScanPage = () => {
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      showToast('Please select an image file', 'error');
+      showToast(tx.invalidFileType, 'error');
       return;
     }
 
     // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
-      showToast('Image size must be less than 10MB', 'error');
+      showToast(tx.fileTooLarge, 'error');
       return;
     }
 
     try {
       const base64 = await fileToBase64(file);
       setSelectedImage(base64);
-      showToast('Image loaded successfully', 'success');
+      setSelectedFile(file);
+      showToast(tx.imageLoaded, 'success');
     } catch (error) {
-      showToast('Failed to load image', 'error');
+      showToast(tx.imageFailed, 'error');
     }
   };
 
@@ -52,7 +59,12 @@ export const ScanPage = () => {
 
   const handleAnalyze = async () => {
     if (!selectedImage) {
-      showToast('Please select an image first', 'warning');
+      showToast(tx.selectImageFirst, 'warning');
+      return;
+    }
+
+    if (!user) {
+      showToast(tx.loginToSave, 'error');
       return;
     }
 
@@ -72,20 +84,37 @@ export const ScanPage = () => {
     }, 250);
 
     try {
+      console.log('🔍 Starting image analysis...');
+      
+      // Analyze image with YOLOv8
       const result = await analyzeImage(selectedImage);
+      console.log('✅ Analysis result:', result);
+      
       setProgress(100);
       
-      // Save scan to history
-      const savedScan = saveScan(result);
+      // Save scan to database (with base64 image)
+      const scanData = {
+        ...result,
+        image: selectedImage // Use base64 image directly
+      };
       
-      showToast('Analysis complete!', 'success');
+      console.log('💾 Saving scan to database...');
+      const savedScan = await saveScan(scanData);
       
-      // Navigate to results
-      setTimeout(() => {
-        navigate(`/results/${savedScan.id}`);
-      }, 500);
+      if (savedScan) {
+        console.log('✅ Scan saved successfully:', savedScan.id);
+        showToast(tx.analysisComplete, 'success');
+        
+        // Navigate to results
+        setTimeout(() => {
+          navigate(`/results/${savedScan.id}`);
+        }, 500);
+      } else {
+        throw new Error('Failed to save scan');
+      }
     } catch (error) {
-      showToast('Analysis failed. Please try again.', 'error');
+      console.error('❌ Analysis error:', error);
+      showToast(tx.analysisFailed, 'error');
       setProgress(0);
     } finally {
       clearInterval(progressInterval);
@@ -96,6 +125,7 @@ export const ScanPage = () => {
 
   const handleReset = () => {
     setSelectedImage(null);
+    setSelectedFile(null);
     setProgress(0);
   };
 
@@ -104,10 +134,10 @@ export const ScanPage = () => {
       {/* Header */}
       <div className="text-center mb-8 animate-fade-in">
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
-          Scan Your Mango Leaves
+          {tx.title}
         </h1>
         <p className="text-lg text-gray-600">
-          Take or upload a photo to detect diseases and pests
+          {tx.subtitle}
         </p>
       </div>
 
@@ -122,10 +152,10 @@ export const ScanPage = () => {
                   <Camera className="text-leaf-600" size={64} />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  Choose Your Method
+                  {tx.chooseMethod}
                 </h2>
                 <p className="text-gray-600">
-                  Capture a photo or upload an existing image
+                  {tx.chooseMethodDesc}
                 </p>
               </div>
 
@@ -136,7 +166,7 @@ export const ScanPage = () => {
                   onClick={handleCameraClick}
                   fullWidth
                 >
-                  Take Photo
+                  {tx.takePhoto}
                 </Button>
                 <Button
                   size="lg"
@@ -145,7 +175,7 @@ export const ScanPage = () => {
                   onClick={handleUploadClick}
                   fullWidth
                 >
-                  Upload Image
+                  {tx.uploadImage}
                 </Button>
               </div>
 
@@ -185,7 +215,7 @@ export const ScanPage = () => {
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-gray-700">
-                    Analyzing image...
+                    {tx.analyzingImage}
                   </span>
                   <span className="text-sm font-medium text-leaf-600">
                     {progress}%
@@ -199,7 +229,7 @@ export const ScanPage = () => {
                 </div>
                 <div className="flex items-center justify-center mt-4 text-gray-600">
                   <Loader className="animate-spin mr-2" size={20} />
-                  <span>Processing with AI...</span>
+                  <span>{tx.processingAI}</span>
                 </div>
               </div>
             )}
@@ -213,7 +243,7 @@ export const ScanPage = () => {
                 disabled={analyzing}
                 loading={analyzing}
               >
-                {analyzing ? 'Analyzing...' : 'Analyze Image'}
+                {analyzing ? tx.analyzing : tx.analyzeImage}
               </Button>
               <Button
                 variant="outline"
@@ -221,7 +251,7 @@ export const ScanPage = () => {
                 onClick={handleReset}
                 disabled={analyzing}
               >
-                Reset
+                {tx.reset}
               </Button>
             </div>
           </Card>
@@ -233,14 +263,14 @@ export const ScanPage = () => {
             <Info className="text-blue-600 flex-shrink-0" size={24} />
             <div>
               <h3 className="font-semibold text-blue-900 mb-2">
-                Tips for Best Results
+                {tx.tipsTitle}
               </h3>
               <ul className="space-y-1 text-sm text-blue-800">
-                <li>• Ensure good lighting conditions</li>
-                <li>• Focus on the affected areas of the leaf</li>
-                <li>• Capture the leaf from a close distance</li>
-                <li>• Avoid blurry or out-of-focus images</li>
-                <li>• Include the entire lesion or affected area</li>
+                <li>• {tx.tip1}</li>
+                <li>• {tx.tip2}</li>
+                <li>• {tx.tip3}</li>
+                <li>• {tx.tip4}</li>
+                <li>• {tx.tip5}</li>
               </ul>
             </div>
           </div>
@@ -249,35 +279,28 @@ export const ScanPage = () => {
         {/* Common Diseases Info */}
         <Card className="animate-slide-up">
           <h3 className="font-bold text-lg text-gray-900 mb-4">
-            Common Mango Diseases We Detect
+            {tx.diseasesWeDetect}
           </h3>
           <div className="grid sm:grid-cols-2 gap-4 text-sm">
             <div className="flex items-start gap-2">
-              <AlertCircle className="text-orange-500 flex-shrink-0 mt-0.5" size={16} />
+              <AlertCircle className="text-red-500 flex-shrink-0 mt-0.5" size={16} />
               <div>
-                <p className="font-semibold text-gray-900">Anthracnose</p>
-                <p className="text-gray-600">Dark spots on leaves and fruit</p>
+                <p className="font-semibold text-gray-900">{tx.dieBack}</p>
+                <p className="text-gray-600">{tx.dieBackDesc}</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <AlertCircle className="text-yellow-500 flex-shrink-0 mt-0.5" size={16} />
               <div>
-                <p className="font-semibold text-gray-900">Powdery Mildew</p>
-                <p className="text-gray-600">White powdery growth on leaves</p>
+                <p className="font-semibold text-gray-900">{tx.powderMildew}</p>
+                <p className="text-gray-600">{tx.powderMildewDesc}</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
-              <AlertCircle className="text-red-500 flex-shrink-0 mt-0.5" size={16} />
+              <AlertCircle className="text-green-500 flex-shrink-0 mt-0.5" size={16} />
               <div>
-                <p className="font-semibold text-gray-900">Bacterial Black Spot</p>
-                <p className="text-gray-600">Black spots with yellow halos</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <AlertCircle className="text-gray-500 flex-shrink-0 mt-0.5" size={16} />
-              <div>
-                <p className="font-semibold text-gray-900">Sooty Mold</p>
-                <p className="text-gray-600">Black sooty coating on leaves</p>
+                <p className="font-semibold text-gray-900">{tx.healthy}</p>
+                <p className="text-gray-600">{tx.healthyDesc}</p>
               </div>
             </div>
           </div>

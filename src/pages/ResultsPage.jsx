@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, AlertTriangle, CheckCircle, Info, Leaf, Camera } from 'lucide-react';
 import { useScan } from '../context/ScanContext';
-import { diseaseDatabase } from '../utils/mockAPI';
+import { useTranslation } from '../hooks/useTranslation';
+import { fetchDiseaseById } from '../utils/diseaseHelpers';
 import { Button } from '../components/common/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/common/Card';
 import { getSeverityColor, getConfidenceColor, formatDate } from '../utils/helpers';
@@ -12,9 +13,53 @@ export const ResultsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { getScanById } = useScan();
+  const { ts, t } = useTranslation();
+  const tx = ts('results');
+  const common = ts('common');
+
+  const [disease, setDisease] = useState(null);
+  const [loadingDisease, setLoadingDisease] = useState(true);
 
   const scan = getScanById(id);
-  const disease = scan ? diseaseDatabase[scan.diseaseId] : null;
+
+  // Fetch disease data from database
+  useEffect(() => {
+    const loadDisease = async () => {
+      if (!scan) {
+        setLoadingDisease(false);
+        return;
+      }
+
+      try {
+        setLoadingDisease(true);
+        const diseaseData = await fetchDiseaseById(scan.diseaseId);
+        if (diseaseData) {
+          // Merge scan confidence with disease data
+          setDisease({
+            ...diseaseData,
+            confidence: scan.confidence
+          });
+        }
+      } catch (error) {
+        console.error('Error loading disease:', error);
+      } finally {
+        setLoadingDisease(false);
+      }
+    };
+
+    loadDisease();
+  }, [scan]);
+
+  // Loading state
+  if (loadingDisease) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Card className="animate-pulse">
+          <div className="h-96 bg-gray-200 rounded-lg"></div>
+        </Card>
+      </div>
+    );
+  }
 
   if (!scan || !disease) {
     return (
@@ -22,13 +67,13 @@ export const ResultsPage = () => {
         <Card className="text-center py-12">
           <AlertTriangle className="mx-auto text-gray-300 mb-4" size={64} />
           <h2 className="text-2xl font-bold text-gray-700 mb-2">
-            Scan Not Found
+            {tx.scanNotFound}
           </h2>
           <p className="text-gray-600 mb-6">
-            The scan you're looking for doesn't exist.
+            {tx.scanNotFoundDesc}
           </p>
           <Button onClick={() => navigate('/dashboard')}>
-            Go to Dashboard
+            {tx.goToDashboard}
           </Button>
         </Card>
       </div>
@@ -38,7 +83,7 @@ export const ResultsPage = () => {
   const isHealthy = disease.severity === 'None';
 
   const handleDownload = () => {
-    showToast('Report downloaded successfully', 'success');
+    showToast(tx.reportDownloaded, 'success');
     // In a real app, this would generate and download a PDF
   };
 
@@ -52,13 +97,13 @@ export const ResultsPage = () => {
           onClick={() => navigate('/history')}
           className="mb-4"
         >
-          Back to History
+          {tx.backToHistory}
         </Button>
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
-          Analysis Results
+          {tx.title}
         </h1>
         <p className="text-gray-600 mt-2">
-          Scanned on {formatDate(scan.date)}
+          {tx.scannedOn} {formatDate(scan.date)}
         </p>
       </div>
 
@@ -87,7 +132,7 @@ export const ResultsPage = () => {
                     <AlertTriangle className="text-orange-600" size={24} />
                   )}
                   <span className={`font-semibold ${isHealthy ? 'text-green-700' : 'text-orange-700'}`}>
-                    {isHealthy ? 'Healthy Leaf' : 'Disease Detected'}
+                    {isHealthy ? tx.healthyLeaf : tx.diseaseDetected}
                   </span>
                 </div>
 
@@ -101,10 +146,10 @@ export const ResultsPage = () => {
                 {/* Severity Badge */}
                 <div className="mb-4">
                   <span className="text-sm font-medium text-gray-700 mr-2">
-                    Severity:
+                    {tx.severity}:
                   </span>
                   <span className={`px-3 py-1 rounded-full font-semibold ${getSeverityColor(disease.severity)}`}>
-                    {disease.severity}
+                    {common[disease.severity.toLowerCase()] || disease.severity}
                   </span>
                 </div>
 
@@ -112,7 +157,7 @@ export const ResultsPage = () => {
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-gray-700">
-                      Confidence Score
+                      {tx.confidenceScore}
                     </span>
                     <span className="text-sm font-bold text-gray-900">
                       {disease.confidence}%
@@ -134,7 +179,7 @@ export const ResultsPage = () => {
         {disease.symptoms && disease.symptoms.length > 0 && (
           <Card className="animate-slide-up">
             <CardHeader>
-              <CardTitle>Common Symptoms</CardTitle>
+              <CardTitle>{tx.commonSymptoms}</CardTitle>
             </CardHeader>
             <CardContent>
               <ul className="space-y-2">
@@ -153,7 +198,7 @@ export const ResultsPage = () => {
         <Card className={`animate-slide-up ${isHealthy ? 'bg-green-50 border-green-200' : 'bg-orange-50 border-orange-200'}`}>
           <CardHeader>
             <CardTitle className={isHealthy ? 'text-green-900' : 'text-orange-900'}>
-              {isHealthy ? 'Maintenance Recommendations' : 'Treatment Recommendations'}
+              {isHealthy ? tx.maintenanceRecommendations : tx.treatmentRecommendations}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -179,7 +224,7 @@ export const ResultsPage = () => {
               <Info className="text-blue-600 flex-shrink-0" size={24} />
               <div>
                 <h3 className="font-semibold text-blue-900 mb-2">
-                  Prevention Tips
+                  {tx.preventionTips}
                 </h3>
                 <p className="text-blue-800">
                   {disease.prevention}
@@ -197,7 +242,7 @@ export const ResultsPage = () => {
             icon={Download}
             onClick={handleDownload}
           >
-            Download Report
+            {tx.downloadReport}
           </Button>
           <Button
             fullWidth
@@ -206,7 +251,7 @@ export const ResultsPage = () => {
             icon={Camera}
             onClick={() => navigate('/scan')}
           >
-            Scan Another Leaf
+            {tx.scanAnotherLeaf}
           </Button>
         </div>
 
@@ -215,11 +260,9 @@ export const ResultsPage = () => {
           <div className="flex items-start gap-3 text-sm">
             <Leaf className="text-leaf-600 flex-shrink-0 mt-0.5" size={20} />
             <div className="text-gray-700">
-              <p className="font-semibold mb-1">Important Note:</p>
+              <p className="font-semibold mb-1">{tx.importantNote}</p>
               <p>
-                This AI-powered diagnosis is meant to assist farmers in early detection. 
-                For severe cases or uncertain results, please consult with a local agricultural 
-                extension officer or plant pathologist for professional advice.
+                {tx.noteDescription}
               </p>
             </div>
           </div>

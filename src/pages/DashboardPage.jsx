@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, TrendingUp, CheckCircle, AlertTriangle, Calendar } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -6,40 +6,65 @@ import { useScan } from '../context/ScanContext';
 import { Button } from '../components/common/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/common/Card';
 import { formatDate, getSeverityColor } from '../utils/helpers';
-import { diseaseDatabase } from '../utils/mockAPI';
+import { fetchDiseases } from '../utils/diseaseHelpers';
+import { useTranslation } from '../hooks/useTranslation';
 
 export const DashboardPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { scanHistory, getStats } = useScan();
+  const { ts } = useTranslation();
+  const tx = ts('dashboard');
   const stats = getStats();
+
+  const [diseases, setDiseases] = useState({});
+  const [loadingDiseases, setLoadingDiseases] = useState(true);
 
   const recentScans = scanHistory.slice(0, 6);
 
+  // Fetch disease data from database
+  useEffect(() => {
+    const loadDiseases = async () => {
+      try {
+        setLoadingDiseases(true);
+        const diseaseData = await fetchDiseases();
+        if (diseaseData) {
+          setDiseases(diseaseData);
+        }
+      } catch (error) {
+        console.error('Error loading diseases:', error);
+      } finally {
+        setLoadingDiseases(false);
+      }
+    };
+
+    loadDiseases();
+  }, []);
+
   const statCards = [
     {
-      title: 'Total Scans',
+      title: tx.totalScans,
       value: stats.total,
       icon: Camera,
       color: 'from-blue-500 to-blue-600',
       bgColor: 'bg-blue-50'
     },
     {
-      title: 'Diseases Found',
+      title: tx.diseasesFound,
       value: stats.diseased,
       icon: AlertTriangle,
       color: 'from-orange-500 to-orange-600',
       bgColor: 'bg-orange-50'
     },
     {
-      title: 'Healthy Scans',
+      title: tx.healthyScans,
       value: stats.healthy,
       icon: CheckCircle,
       color: 'from-green-500 to-green-600',
       bgColor: 'bg-green-50'
     },
     {
-      title: 'Health Rate',
+      title: tx.healthRate,
       value: `${stats.accuracy}%`,
       icon: TrendingUp,
       color: 'from-purple-500 to-purple-600',
@@ -52,10 +77,10 @@ export const DashboardPage = () => {
       {/* Welcome Section */}
       <div className="mb-8 animate-fade-in">
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-          Welcome back, {user?.name}! 👋
+          {tx.welcomeBack}, {user?.name}! 👋
         </h1>
         <p className="text-lg text-gray-600 dark:text-gray-400">
-          Monitor your mango trees and keep them healthy
+          {tx.subtitle}
         </p>
       </div>
 
@@ -64,9 +89,9 @@ export const DashboardPage = () => {
         <Card className="bg-gradient-to-r from-leaf-500 to-leaf-600 text-white">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-bold mb-2">Ready to scan?</h2>
+              <h2 className="text-2xl font-bold mb-2">{tx.readyToScan}</h2>
               <p className="text-leaf-50">
-                Detect diseases early to protect your harvest
+                {tx.scanDescription}
               </p>
             </div>
             <button
@@ -74,7 +99,7 @@ export const DashboardPage = () => {
               className="inline-flex items-center gap-2 px-6 py-3 text-lg font-semibold bg-white text-leaf-600 rounded-lg shadow-lg hover:bg-gray-50 hover:shadow-xl transition-all duration-200 whitespace-nowrap"
             >
               <Camera size={20} />
-              Start New Scan
+              {tx.startNewScan}
             </button>
           </div>
         </Card>
@@ -102,13 +127,13 @@ export const DashboardPage = () => {
       {/* Recent Scans */}
       <div className="animate-slide-up">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Recent Scans</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{tx.recentScans}</h2>
           {scanHistory.length > 0 && (
             <Button
               variant="ghost"
               onClick={() => navigate('/history')}
             >
-              View All
+              {tx.viewAll}
             </Button>
           )}
         </div>
@@ -117,22 +142,34 @@ export const DashboardPage = () => {
           <Card className="text-center py-12">
             <Camera className="mx-auto text-gray-300 dark:text-gray-600 mb-4" size={64} />
             <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              No scans yet
+              {tx.noScans}
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Start your first scan to monitor your mango trees
+              {tx.noScansDescription}
             </p>
             <Button
               icon={Camera}
               onClick={() => navigate('/scan')}
             >
-              Start First Scan
+              {tx.startFirstScan}
             </Button>
           </Card>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {recentScans.map((scan) => {
-              const disease = diseaseDatabase[scan.diseaseId];
+              const disease = diseases[scan.diseaseId];
+              
+              // Show loading state if diseases haven't loaded yet
+              if (loadingDiseases || !disease) {
+                return (
+                  <Card key={scan.id} className="animate-pulse">
+                    <div className="aspect-video bg-gray-300 rounded-lg mb-4"></div>
+                    <div className="h-6 bg-gray-300 rounded mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                  </Card>
+                );
+              }
+
               return (
                 <Card 
                   key={scan.id} 
@@ -143,16 +180,16 @@ export const DashboardPage = () => {
                   <div className="aspect-video bg-gray-200 rounded-lg mb-4 overflow-hidden">
                     <img
                       src={scan.image}
-                      alt={disease?.disease}
+                      alt={disease.disease}
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100 mb-2">
-                    {disease?.disease}
+                    {disease.disease}
                   </h3>
                   <div className="flex items-center justify-between text-sm">
-                    <span className={`px-2 py-1 rounded-full font-medium ${getSeverityColor(disease?.severity)}`}>
-                      {disease?.severity}
+                    <span className={`px-2 py-1 rounded-full font-medium ${getSeverityColor(disease.severity)}`}>
+                      {disease.severity}
                     </span>
                     <span className="text-gray-500 dark:text-gray-400 flex items-center gap-1">
                       <Calendar size={14} />

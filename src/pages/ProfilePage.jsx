@@ -4,6 +4,7 @@ import { User, Mail, Calendar, LogOut, Camera, Award, TrendingUp, Globe, Bell, M
 import { useAuth } from '../context/AuthContext';
 import { useScan } from '../context/ScanContext';
 import { useTheme } from '../context/ThemeContext';
+import { useTranslation } from '../hooks/useTranslation';
 import { Button } from '../components/common/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/common/Card';
 import { Modal } from '../components/common/Modal';
@@ -16,6 +17,8 @@ export const ProfilePage = () => {
   const { user, logout, updateProfile } = useAuth();
   const { getStats } = useScan();
   const { isDark, toggleTheme } = useTheme();
+  const { ts } = useTranslation();
+  const tx = ts('profile');
   const stats = getStats();
 
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
@@ -30,54 +33,59 @@ export const ProfilePage = () => {
   const handleAvatarSelect = (avatar) => {
     updateProfile({ avatar: avatar.emoji });
     setIsAvatarModalOpen(false);
-    showToast('Avatar updated successfully', 'success');
+    showToast(tx.avatarUpdated, 'success');
   };
 
   const handleLanguageChange = (e) => {
     const newLang = e.target.value;
     setLanguage(newLang);
     updateProfile({ language: newLang });
-    showToast('Language preference updated', 'success');
+    showToast(tx.languageUpdated, 'success');
+    
+    // Reload page after a short delay to apply language changes
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
   };
 
   const handleNotificationsToggle = () => {
     const newValue = !notifications;
     setNotifications(newValue);
     updateProfile({ notifications: newValue });
-    showToast(`Notifications ${newValue ? 'enabled' : 'disabled'}`, 'success');
+    showToast(newValue ? tx.notificationsEnabled : tx.notificationsDisabled, 'success');
   };
 
   const handleLogout = async () => {
     await logout();
     navigate('/');
-    showToast('Logged out successfully', 'success');
+    showToast(tx.loggedOut, 'success');
   };
 
   const userStats = [
     {
       icon: Camera,
-      label: 'Total Scans',
+      label: tx.totalScans,
       value: stats.total,
       color: 'from-blue-500 to-blue-600',
       bgColor: 'bg-blue-50'
     },
     {
       icon: Award,
-      label: 'Health Rate',
+      label: tx.healthRate,
       value: `${stats.accuracy}%`,
       color: 'from-green-500 to-green-600',
       bgColor: 'bg-green-50'
     },
     {
       icon: TrendingUp,
-      label: 'Diseases Detected',
+      label: tx.diseasesDetected,
       value: stats.diseased,
       color: 'from-orange-500 to-orange-600',
       bgColor: 'bg-orange-50'
     },
     {
       icon: Calendar,
-      label: 'Account Age',
+      label: tx.accountAge,
       value: getAccountAge(user.joinDate),
       color: 'from-purple-500 to-purple-600',
       bgColor: 'bg-purple-50'
@@ -89,10 +97,10 @@ export const ProfilePage = () => {
       {/* Header */}
       <div className="mb-8 animate-fade-in">
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
-          Profile
+          {tx.title}
         </h1>
         <p className="text-lg text-gray-600">
-          Manage your account and preferences
+          {tx.subtitle}
         </p>
       </div>
 
@@ -109,7 +117,7 @@ export const ProfilePage = () => {
                 {user.avatar}
               </div>
               <span className="text-sm text-leaf-600 font-medium group-hover:underline">
-                Change Avatar
+                {tx.changeAvatar}
               </span>
             </button>
 
@@ -159,7 +167,7 @@ export const ProfilePage = () => {
         {/* Settings */}
         <Card className="animate-slide-up">
           <CardHeader>
-            <CardTitle>Settings</CardTitle>
+            <CardTitle>{tx.settings}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
@@ -167,15 +175,15 @@ export const ProfilePage = () => {
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                   <Globe size={18} />
-                  Language Preference
+                  {tx.languagePreference}
                 </label>
                 <select
                   value={language}
                   onChange={handleLanguageChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-leaf-500 focus:border-transparent"
                 >
-                  <option value="en">English</option>
-                  <option value="fil">Filipino (Tagalog)</option>
+                  <option value="en">{tx.english}</option>
+                  <option value="fil">{tx.filipino}</option>
                 </select>
               </div>
 
@@ -184,7 +192,7 @@ export const ProfilePage = () => {
                 <div className="flex items-center justify-between">
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                     <Bell size={18} />
-                    Notifications
+                    {tx.notifications}
                   </label>
                   <button
                     onClick={handleNotificationsToggle}
@@ -202,7 +210,7 @@ export const ProfilePage = () => {
                   </button>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  Receive updates about your scans and new features
+                  {tx.notificationsDesc}
                 </p>
               </div>
 
@@ -211,7 +219,7 @@ export const ProfilePage = () => {
                 <div className="flex items-center justify-between">
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                     {isDark ? <Moon size={18} /> : <Sun size={18} />}
-                    Dark Mode
+                    {tx.darkMode}
                   </label>
                   <button
                     onClick={toggleTheme}
@@ -229,7 +237,7 @@ export const ProfilePage = () => {
                   </button>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  Switch between light and dark themes
+                  {tx.darkModeDesc}
                 </p>
               </div>
             </div>
@@ -241,10 +249,10 @@ export const ProfilePage = () => {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
               <h3 className="font-semibold text-red-900 mb-1">
-                Sign Out
+                {tx.signOut}
               </h3>
               <p className="text-sm text-red-700">
-                You can always sign back in anytime
+                {tx.signOutDesc}
               </p>
             </div>
             <Button
@@ -252,7 +260,7 @@ export const ProfilePage = () => {
               icon={LogOut}
               onClick={handleLogout}
             >
-              Logout
+              {tx.logout}
             </Button>
           </div>
         </Card>
@@ -262,7 +270,7 @@ export const ProfilePage = () => {
       <Modal
         isOpen={isAvatarModalOpen}
         onClose={() => setIsAvatarModalOpen(false)}
-        title="Choose Your Avatar"
+        title={tx.chooseAvatar}
         size="md"
       >
         <div className="grid grid-cols-4 gap-4">
