@@ -20,13 +20,8 @@ export const LoginPage = () => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    console.log('LoginPage: isAuthenticated changed:', isAuthenticated);
-    if (isAuthenticated) {
-      console.log('LoginPage: Navigating to dashboard');
-      navigate('/dashboard');
-    }
-  }, [isAuthenticated, navigate]);
+  // Remove the useEffect that checks isAuthenticated
+  // The handleSubmit will navigate directly after successful login
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -79,15 +74,18 @@ export const LoginPage = () => {
 
       if (result.success) {
         console.log('LoginPage: Login successful, navigating to dashboard');
-        navigate('/dashboard');
+        // Small delay to ensure state updates propagate
+        setTimeout(() => {
+          navigate('/dashboard', { replace: true });
+        }, 100);
       } else {
         console.log('LoginPage: Login failed:', result.error);
         setErrors({ form: result.error || 'Authentication failed' });
+        setLoading(false);
       }
     } catch (error) {
       console.error('LoginPage: Error during login:', error);
       setErrors({ form: 'An error occurred. Please try again.' });
-    } finally {
       setLoading(false);
     }
   };

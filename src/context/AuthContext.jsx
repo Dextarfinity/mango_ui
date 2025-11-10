@@ -186,10 +186,16 @@ export const AuthProvider = ({ children }) => {
       const result = await supabaseSignIn(email, password);
       
       if (result.success && result.data?.user) {
+        console.log('AuthContext: Real auth successful, setting session...');
+        // Explicitly set the session
+        setSession(result.data.session);
+        console.log('AuthContext: Session set, loading profile...');
         await loadUserProfile(result.data.user.id);
+        console.log('AuthContext: Profile loaded successfully');
       }
       
       setLoading(false);
+      console.log('AuthContext: Returning result:', result);
       return result;
     } catch (error) {
       console.error('Login error:', error);
