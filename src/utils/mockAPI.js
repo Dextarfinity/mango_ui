@@ -26,7 +26,7 @@ export const diseaseDatabase = {
   healthy: {
     id: 'healthy',
     disease: 'Healthy',
-    confidence: 2,
+    confidence: 10,
     severity: 'None',
     symptoms: [
       'Vibrant green leaves',
@@ -48,7 +48,7 @@ export const diseaseDatabase = {
   powderMildew: {
     id: 'powderMildew',
     disease: 'Powder Mildew',
-    confidence: 18,
+    confidence: 50,
     severity: 'Medium',
     symptoms: [
       'White powdery growth on leaves and flowers',
@@ -93,32 +93,60 @@ export const analyzeImage = async (imageData) => {
     setTimeout(() => {
       console.log('🎯 Using YOLOv8s Model for Analysis');
       console.log('📊 Model: Mango Leaf Disease Detection (YOLOv8s)');
-      console.log('� Classes: Die Back, Healthy, Powder Mildew');
-      console.log('�🔍 Processing image...');
+      console.log('🏷️ Classes: Die Back, Healthy, Powder Mildew');
+      console.log('🔍 Processing image...');
       
-      // Randomly select a disease from trained model classes
+      // Generate 1-3 random detections
       const diseases = ['dieBack', 'healthy', 'powderMildew'];
-      const randomDisease = diseases[Math.floor(Math.random() * diseases.length)];
-      const result = { ...diseaseDatabase[randomDisease] };
+      const numDetections = Math.floor(Math.random() * 3) + 1; // 1 to 3 detections
+      const detections = [];
+      const usedDiseases = new Set();
       
-      // Add slight variation to confidence
-      result.confidence = Math.max(85, Math.min(99, result.confidence + Math.random() * 4 - 2));
-      result.confidence = Math.round(result.confidence);
-      result.image = imageData;
-      result.analyzedAt = new Date();
+      for (let i = 0; i < numDetections; i++) {
+        let randomDisease;
+        let attempts = 0;
+        do {
+          randomDisease = diseases[Math.floor(Math.random() * diseases.length)];
+          attempts++;
+        } while (usedDiseases.has(randomDisease) && attempts < 10);
+        
+        if (usedDiseases.has(randomDisease)) break;
+        usedDiseases.add(randomDisease);
+        
+        const diseaseData = { ...diseaseDatabase[randomDisease] };
+        
+        // Add slight variation to confidence
+        diseaseData.confidence = Math.max(75, Math.min(99, diseaseData.confidence + Math.random() * 15));
+        diseaseData.confidence = Math.round(diseaseData.confidence);
+        
+        detections.push(diseaseData);
+      }
       
-      // Add model metadata
-      result.model = {
-        name: 'YOLOv8s',
-        path: '/yolov8s.pt',
-        dataset: 'Mango-Leaf-Diseases-v2',
-        classes: ['Die Back', 'Healthy', 'Powder Mildew'],
-        version: '8s'
+      // Sort by confidence (highest first)
+      detections.sort((a, b) => b.confidence - a.confidence);
+      
+      // Primary detection (highest confidence)
+      const primaryDetection = detections[0];
+      
+      const result = {
+        ...primaryDetection,
+        image: imageData,
+        analyzedAt: new Date(),
+        allDetections: detections, // All detected diseases
+        model: {
+          name: 'YOLOv8s',
+          path: '/yolov8s.pt',
+          dataset: 'Mango-Leaf-Diseases-v2',
+          classes: ['Die Back', 'Healthy', 'Powder Mildew'],
+          version: '8s'
+        }
       };
       
       console.log('✅ Analysis complete:', {
-        disease: result.disease,
-        confidence: result.confidence + '%',
+        totalDetections: detections.length,
+        primary: primaryDetection.disease,
+        confidence: primaryDetection.confidence + '%',
+        all: detections.map(d => d.disease).join(', '),
         model: result.model.name
       });
       

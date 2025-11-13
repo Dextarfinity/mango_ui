@@ -197,28 +197,35 @@ export const getScanHistory = async (userId) => {
 
 export const saveScan = async (userId, scanData) => {
   try {
-    console.log('💾 Saving scan for user:', userId)
+    console.log('💾 Saving scan(s) for user:', userId)
+    
+    // If allDetections exists, save each detection as a separate record
+    const detectionsToSave = scanData.allDetections || [scanData];
+    
+    const scanRecords = detectionsToSave.map(detection => ({
+      user_id: userId,
+      disease_id: detection.id || detection.diseaseId,
+      disease_name: detection.disease,
+      confidence: detection.confidence,
+      severity: detection.severity,
+      image_url: scanData.imageUrl,
+      location: scanData.location || 'Philippines',
+      model_name: scanData.modelName || 'YOLOv8s',
+      model_version: scanData.modelVersion || '8s',
+      model_dataset: scanData.dataset || 'Mango-Leaf-Diseases-v2'
+    }));
+    
+    console.log(`📊 Inserting ${scanRecords.length} detection(s)`);
     
     const { data, error } = await supabase
       .from('scans')
-      .insert([{
-        user_id: userId,
-        disease_id: scanData.diseaseId,
-        disease_name: scanData.disease,
-        confidence: scanData.confidence,
-        severity: scanData.severity,
-        image_url: scanData.imageUrl,
-        location: scanData.location || 'Philippines',
-        model_name: scanData.modelName || 'YOLOv8s',
-        model_version: scanData.modelVersion || '8s',
-        model_dataset: scanData.dataset || 'Mango-Leaf-Diseases-v2'
-      }])
+      .insert(scanRecords)
       .select()
     
     if (error) throw error
     
-    console.log('✅ Scan saved')
-    return { success: true, data: data?.[0] }
+    console.log(`✅ ${data?.length || 0} scan(s) saved`)
+    return { success: true, data: data || [] }
   } catch (error) {
     console.error('❌ Save scan failed:', error.message)
     return { success: false, error: error.message }

@@ -175,6 +175,54 @@ export const ResultsPage = () => {
           </div>
         </Card>
 
+        {/* All Detections - Show if multiple diseases detected */}
+        {scan.allDetections && scan.allDetections.length > 1 && (
+          <Card className="animate-slide-up">
+            <CardHeader>
+              <CardTitle>All Detected Conditions ({scan.allDetections.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {scan.allDetections.map((detection, index) => {
+                  const isHealthyDetection = detection.severity === 'None';
+                  return (
+                    <div
+                      key={index}
+                      className={`p-4 rounded-lg border-2 ${
+                        isHealthyDetection
+                          ? 'bg-green-50 border-green-200'
+                          : index === 0
+                          ? 'bg-orange-50 border-orange-300'
+                          : 'bg-gray-50 border-gray-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-bold text-gray-900">{detection.disease}</h3>
+                        {index === 0 && (
+                          <span className="text-xs bg-orange-500 text-white px-2 py-1 rounded-full">
+                            Primary
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600 mb-3">
+                        {detection.description}
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <span className={`text-xs px-2 py-1 rounded-full font-semibold ${getSeverityColor(detection.severity)}`}>
+                          {common[detection.severity.toLowerCase()] || detection.severity}
+                        </span>
+                        <span className="text-sm font-bold text-gray-900">
+                          {detection.confidence}%
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Symptoms */}
         {disease.symptoms && disease.symptoms.length > 0 && (
           <Card className="animate-slide-up">

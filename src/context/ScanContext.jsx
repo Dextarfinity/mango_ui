@@ -79,22 +79,54 @@ export const ScanProvider = ({ children }) => {
       const result = await fetchScanHistory(userId);
       
       if (result.success && result.data) {
-        // Transform database format to app format
-        const formattedScans = result.data.map(scan => ({
-          id: scan.id,
-          diseaseId: scan.disease_id,
-          disease: scan.disease_name,
-          confidence: scan.confidence,
-          severity: scan.severity,
-          image: scan.image_url,
-          date: new Date(scan.analyzed_at),
-          location: scan.location,
-          model: {
-            name: scan.model_name,
-            version: scan.model_version,
-            dataset: scan.model_dataset
+        // Group scans by image_url and analyzed_at (scans from the same analysis session)
+        const groupedScans = {};
+        
+        result.data.forEach(scan => {
+          // Create a unique key for scans that belong together
+          // Group by image URL and timestamp (within 1 second)
+          const timestamp = new Date(scan.analyzed_at).getTime();
+          const groupKey = `${scan.image_url}_${Math.floor(timestamp / 1000)}`;
+          
+          if (!groupedScans[groupKey]) {
+            groupedScans[groupKey] = [];
           }
-        }));
+          groupedScans[groupKey].push(scan);
+        });
+        
+        // Transform grouped scans into app format
+        const formattedScans = Object.values(groupedScans).map(scanGroup => {
+          // Sort by confidence (highest first)
+          scanGroup.sort((a, b) => b.confidence - a.confidence);
+          const primaryScan = scanGroup[0];
+          
+          return {
+            id: primaryScan.id,
+            diseaseId: primaryScan.disease_id,
+            disease: primaryScan.disease_name,
+            confidence: primaryScan.confidence,
+            severity: primaryScan.severity,
+            image: primaryScan.image_url,
+            date: new Date(primaryScan.analyzed_at),
+            location: primaryScan.location,
+            model: {
+              name: primaryScan.model_name,
+              version: primaryScan.model_version,
+              dataset: primaryScan.model_dataset
+            },
+            allDetections: scanGroup.map(scan => ({
+              id: scan.disease_id,
+              disease: scan.disease_name,
+              confidence: scan.confidence,
+              severity: scan.severity,
+              description: scan.description || ''
+            })),
+            scanIds: scanGroup.map(scan => scan.id)
+          };
+        });
+        
+        // Sort by date (most recent first)
+        formattedScans.sort((a, b) => b.date - a.date);
         
         setScanHistory(formattedScans);
       }
@@ -123,26 +155,41 @@ export const ScanProvider = ({ children }) => {
         location: scanResult.location || 'Philippines',
         modelName: scanResult.model?.name || 'YOLOv8s',
         modelVersion: scanResult.model?.version || '8s',
-        dataset: scanResult.model?.dataset || 'Mango-Leaf-Diseases-v2'
+        dataset: scanResult.model?.dataset || 'Mango-Leaf-Diseases-v2',
+        allDetections: scanResult.allDetections // Pass all detections to be saved
       };
 
       const result = await saveScanToDb(user.id, scanData);
       
-      if (result.success && result.data) {
+      if (result.success && result.data && result.data.length > 0) {
+        // Use the first (primary) detection as the main scan record
+        const primaryData = result.data[0];
+        
+        // Map all saved detections
+        const allDetections = result.data.map(detection => ({
+          id: detection.disease_id,
+          disease: detection.disease_name,
+          confidence: detection.confidence,
+          severity: detection.severity,
+          description: scanResult.allDetections?.find(d => d.id === detection.disease_id)?.description || ''
+        }));
+        
         const savedScan = {
-          id: result.data.id,
-          diseaseId: result.data.disease_id,
-          disease: result.data.disease_name,
-          confidence: result.data.confidence,
-          severity: result.data.severity,
-          image: result.data.image_url,
-          date: new Date(result.data.analyzed_at),
-          location: result.data.location,
+          id: primaryData.id,
+          diseaseId: primaryData.disease_id,
+          disease: primaryData.disease_name,
+          confidence: primaryData.confidence,
+          severity: primaryData.severity,
+          image: primaryData.image_url,
+          date: new Date(primaryData.analyzed_at),
+          location: primaryData.location,
           model: {
-            name: result.data.model_name,
-            version: result.data.model_version,
-            dataset: result.data.model_dataset
-          }
+            name: primaryData.model_name,
+            version: primaryData.model_version,
+            dataset: primaryData.model_dataset
+          },
+          allDetections: allDetections,
+          scanIds: result.data.map(d => d.id) // Store all related scan IDs
         };
 
         setScanHistory(prev => [savedScan, ...prev]);
@@ -166,16 +213,28 @@ export const ScanProvider = ({ children }) => {
   const deleteScan = async (scanId) => {
     try {
       setLoading(true);
-      const result = await deleteScanFromDb(scanId);
       
-      if (result.success) {
-        setScanHistory(prev => prev.filter(scan => scan.id !== scanId));
-        if (currentScan?.id === scanId) {
-          setCurrentScan(null);
+      // Get the scan to find all related scan IDs
+      const scanToDelete = scanHistory.find(scan => scan.id === scanId);
+      
+      if (scanToDelete?.scanIds && scanToDelete.scanIds.length > 0) {
+        // Delete all related scan records
+        console.log(`🗑️ Deleting ${scanToDelete.scanIds.length} related scan record(s)`);
+        
+        for (const id of scanToDelete.scanIds) {
+          await deleteScanFromDb(id);
         }
+      } else {
+        // If no scanIds array, just delete the primary one
+        await deleteScanFromDb(scanId);
       }
       
-      return result;
+      setScanHistory(prev => prev.filter(scan => scan.id !== scanId));
+      if (currentScan?.id === scanId) {
+        setCurrentScan(null);
+      }
+      
+      return { success: true };
     } catch (error) {
       console.error('Error deleting scan:', error);
       return { success: false, error: error.message };

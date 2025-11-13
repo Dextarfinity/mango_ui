@@ -118,29 +118,52 @@ const simulateInference = async (img, confidence) => {
   // Simulate inference delay
   await new Promise(resolve => setTimeout(resolve, 500));
   
-  // Generate mock detection results
-  const classIndex = Math.floor(Math.random() * 3);
-  const classInfo = CLASS_MAPPING[classIndex];
-  const detectionConfidence = Math.max(confidence, Math.random() * 0.2 + 0.8);
+  // Generate 1-3 random detections to simulate multiple diseases in one image
+  const numDetections = Math.floor(Math.random() * 3) + 1; // 1 to 3 detections
+  const detections = [];
+  const usedClasses = new Set();
+  
+  for (let i = 0; i < numDetections; i++) {
+    // Ensure we don't duplicate classes
+    let classIndex;
+    let attempts = 0;
+    do {
+      classIndex = Math.floor(Math.random() * 3);
+      attempts++;
+    } while (usedClasses.has(classIndex) && attempts < 10);
+    
+    if (usedClasses.has(classIndex)) break; // Skip if we can't find a unique class
+    usedClasses.add(classIndex);
+    
+    const classInfo = CLASS_MAPPING[classIndex];
+    const detectionConfidence = Math.max(confidence, Math.random() * 0.2 + 0.75);
+    
+    // Position bounding boxes in different areas of the image
+    const xOffset = (i % 2) * 0.3;
+    const yOffset = Math.floor(i / 2) * 0.3;
+    
+    detections.push({
+      classIndex,
+      className: classInfo.disease,
+      classId: classInfo.id,
+      confidence: Math.round(detectionConfidence * 100),
+      bbox: {
+        x: Math.random() * 0.2 + xOffset,
+        y: Math.random() * 0.2 + yOffset,
+        width: 0.3 + Math.random() * 0.15,
+        height: 0.3 + Math.random() * 0.15
+      },
+      severity: classInfo.severity,
+      description: classInfo.description
+    });
+  }
+  
+  // Sort detections by confidence (highest first)
+  detections.sort((a, b) => b.confidence - a.confidence);
   
   return {
     model: MODEL_CONFIG,
-    detections: [
-      {
-        classIndex,
-        className: classInfo.disease,
-        classId: classInfo.id,
-        confidence: Math.round(detectionConfidence * 100),
-        bbox: {
-          x: Math.random() * 0.2,
-          y: Math.random() * 0.2,
-          width: 0.6 + Math.random() * 0.2,
-          height: 0.6 + Math.random() * 0.2
-        },
-        severity: classInfo.severity,
-        description: classInfo.description
-      }
-    ],
+    detections,
     imageInfo: {
       width: img.width,
       height: img.height,
