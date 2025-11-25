@@ -4,7 +4,7 @@ export const diseaseDatabase = {
   dieBack: {
     id: 'dieBack',
     disease: 'Die Back',
-    confidence: 99,
+    confidence: 30,
     severity: 'High',
     symptoms: [
       'Browning and drying of shoot tips',
@@ -48,7 +48,7 @@ export const diseaseDatabase = {
   powderMildew: {
     id: 'powderMildew',
     disease: 'Powder Mildew',
-    confidence: 50,
+    confidence: 10,
     severity: 'Medium',
     symptoms: [
       'White powdery growth on leaves and flowers',
