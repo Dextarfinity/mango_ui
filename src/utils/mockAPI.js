@@ -85,14 +85,14 @@ export const avatarOptions = [
   { id: 12, emoji: '🌈', label: 'Rainbow' }
 ];
 
-// Simulate AI analysis with YOLOv8 model
+// Simulate AI analysis with YOLOv11 model
 // Uses trained model classes: Die Back, Healthy, Powder Mildew
 export const analyzeImage = async (imageData) => {
   return new Promise((resolve) => {
     // Simulate processing time
     setTimeout(() => {
-      console.log('🎯 Using YOLOv8s Model for Analysis');
-      console.log('📊 Model: Mango Leaf Disease Detection (YOLOv8s)');
+      console.log('🎯 Using YOLOv11n Model for Analysis');
+      console.log('📊 Model: Mango Leaf Disease Detection (YOLOv11n)');
       console.log('🏷️ Classes: Die Back, Healthy, Powder Mildew');
       console.log('🔍 Processing image...');
       
@@ -134,11 +134,11 @@ export const analyzeImage = async (imageData) => {
         analyzedAt: new Date(),
         allDetections: detections, // All detected diseases
         model: {
-          name: 'YOLOv8s',
-          path: '/yolov8s.pt',
+          name: 'YOLOv11n',
+          path: '/yolov11n.pt',
           dataset: 'Mango-Leaf-Diseases-v2',
           classes: ['Die Back', 'Healthy', 'Powder Mildew'],
-          version: '8s'
+          version: '11n'
         }
       };
       
