@@ -1,20 +1,20 @@
 /**
- * YOLOv11 Model Handler
- * Handles loading and inference with the YOLOv11n trained model for mango disease detection
+ * YOLOv8 Model Handler
+ * Handles loading and inference with the YOLOv8m trained model for mango disease detection
  * 
  * Model Details:
- * - Name: YOLOv11n (Nano variant)
- * - Location: /yolov11n.pt
+ * - Name: YOLOv8m (Medium variant)
+ * - Location: /yolov8m.pt
  * - Trained on: Mango-Leaf-Diseases-v2 dataset
  * - Classes: Die Back, Healthy, Powder Mildew
  */
 
 const MODEL_CONFIG = {
-  path: '/yolov11n.pt',
-  modelName: 'YOLOv11n',
+  path: '/yolov8m.pt',
+  modelName: 'YOLOv8m',
   dataset: 'Mango-Leaf-Diseases-v2',
   classes: ['Die Back', 'Healthy', 'Powder Mildew'],
-  version: '11n',
+  version: '8m',
   inputSize: 640,
   confThreshold: 0.5,
   iouThreshold: 0.45
@@ -48,7 +48,7 @@ const CLASS_MAPPING = {
  */
 export const initializeYOLOModel = async () => {
   try {
-    console.log('🤖 Initializing YOLOv11 Model...');
+    console.log('🤖 Initializing YOLOv8 Model...');
     console.log('📦 Model Path:', MODEL_CONFIG.path);
     console.log('🏷️  Classes:', MODEL_CONFIG.classes.join(', '));
     
@@ -65,7 +65,7 @@ export const initializeYOLOModel = async () => {
       fileSize: response.headers.get('content-length')
     };
     
-    console.log('✅ YOLOv11 Model Ready');
+    console.log('✅ YOLOv8 Model Ready');
     console.log(`📊 File Size: ${(response.headers.get('content-length') / (1024 * 1024)).toFixed(2)} MB`);
     
     return modelInfo;
@@ -83,7 +83,7 @@ export const initializeYOLOModel = async () => {
  */
 export const runYOLOInference = async (imageData, confidence = MODEL_CONFIG.confThreshold) => {
   try {
-    console.log('🎯 Running YOLOv11 Inference...');
+    console.log('🎯 Running YOLOv8 Inference...');
     console.log('🔍 Processing image with confidence threshold:', confidence);
     
     // Create image element for preprocessing
